@@ -107,6 +107,7 @@ impl Framebuffer {
     // i wont make a specific square rasterizer because GPU rendering generally splits polygons
     // into triangles anyway so ill make a general polygon rasterizer that splits itself into
     // multiple triangles
+    // nvm i just did that lmfao
     pub fn draw_filled_square(
         &mut self,
         v1: [f64; 2],
@@ -115,6 +116,14 @@ impl Framebuffer {
         v4: [f64; 2],
         color: Colors,
     ) {
+        let triangle1 = [v1, v2, v4];
+        let triangle2 = [v2, v3, v4];
+
+        // bro im so dumb i coulda just done this from the start instead of typing all that code
+        self.draw_filled_triangle(triangle1[0], triangle1[1], triangle1[2], color);
+        self.draw_filled_triangle(triangle2[0], triangle2[1], triangle2[2], color);
+
+        /*
         // edge function
         fn edge(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64 {
             (c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0])
@@ -183,5 +192,6 @@ impl Framebuffer {
                 }
             }
         }
+        */
     }
 }
