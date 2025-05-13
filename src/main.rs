@@ -25,9 +25,19 @@ fn main() {
         framebuffer.draw_line(200.0, 600.0, 1000.0, 600.0, Colors::RED);
         framebuffer.draw_line(1000.0, 600.0, 600.0, 200.0, Colors::RED);
         framebuffer.draw_line(600.0, 200.0, 200.0, 600.0, Colors::RED);
-        */
         let triangle = Triangle::new([200.0, 600.0], [1000.0, 600.0], [600.0, 200.0], Colors::RED);
         triangle.draw(&mut framebuffer);
+        */
+
+        // Drawing a square
+        let square = Square::new(
+            [400.0, 200.0],
+            [800.0, 200.0],
+            [800.0, 600.0],
+            [400.0, 600.0],
+            Colors::RED,
+        );
+        square.draw(&mut framebuffer);
 
         window
             .update_with_buffer(&framebuffer.buffer, WIDTH, HEIGHT)
