@@ -4,6 +4,9 @@ use framebuffer::*;
 mod colors;
 use colors::*;
 
+mod constructs;
+use constructs::*;
+
 use minifb::{Key, Window, WindowOptions};
 
 fn main() {
@@ -18,9 +21,13 @@ fn main() {
         framebuffer.clear(Colors::BLACK);
 
         // Drawing a triangle
+        /*
         framebuffer.draw_line(200.0, 600.0, 1000.0, 600.0, Colors::RED);
         framebuffer.draw_line(1000.0, 600.0, 600.0, 200.0, Colors::RED);
         framebuffer.draw_line(600.0, 200.0, 200.0, 600.0, Colors::RED);
+        */
+        let triangle = Triangle::new([200.0, 600.0], [1000.0, 600.0], [600.0, 200.0], Colors::RED);
+        triangle.draw(&mut framebuffer);
 
         window
             .update_with_buffer(&framebuffer.buffer, WIDTH, HEIGHT)
