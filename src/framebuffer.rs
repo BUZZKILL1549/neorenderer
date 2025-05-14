@@ -119,79 +119,90 @@ impl Framebuffer {
         let triangle1 = [v1, v2, v4];
         let triangle2 = [v2, v3, v4];
 
-        // bro im so dumb i coulda just done this from the start instead of typing all that code
         self.draw_filled_triangle(triangle1[0], triangle1[1], triangle1[2], color);
         self.draw_filled_triangle(triangle2[0], triangle2[1], triangle2[2], color);
+    }
 
-        /*
-        // edge function
-        fn edge(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64 {
-            (c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0])
+    // ok this is the earclip algorithm. has a lot of caveats but its really simple to code
+    pub fn ear_clip(&mut self, polygon: Vec<[f64; 2]>) -> Vec<[[f64; 2]; 3]> {
+        let mut triangles = Vec::new();
+        let mut vertices = polygon.clone();
+
+        // this helps to convert the polygon direction to CW if its in CCW format
+        // if its in CCW format, then the function would not be able to detect ears because it only
+        // takes CW
+        fn polygon_area(polygon: &[[f64; 2]]) -> f64 {
+            let mut area = 0.0;
+            for i in 0..polygon.len() {
+                let [x1, y1] = polygon[i];
+                let [x2, y2] = polygon[(i + 1) % polygon.len()];
+                area += x1 * y2 - x2 * y1;
+            }
+            area * 0.5
         }
 
-        // rendering triangle1
-        let t1_min_x = v1[0].min(v2[0]).min(v4[0]).floor().max(0.0) as usize;
-        let t1_max_x = v1[0]
-            .max(v2[0])
-            .max(v4[0])
-            .ceil()
-            .min(self.width as f64 - 1.0) as usize;
-        let t1_min_y = v1[1].min(v2[1]).min(v4[1]).floor().max(0.0) as usize;
-        let t1_max_y = v1[1]
-            .max(v2[1])
-            .max(v4[1])
-            .ceil()
-            .min(self.height as f64 - 1.0) as usize;
+        fn cross(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64 {
+            (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        }
 
-        let area1 = edge(v1, v2, v4);
+        fn point_in_triangle(p: [f64; 2], a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> bool {
+            let area = cross(a, b, c);
+            let w0 = cross(b, c, p);
+            let w1 = cross(c, a, p);
+            let w2 = cross(a, b, p);
 
-        for y in t1_min_y..=t1_max_y {
-            for x in t1_min_x..=t1_max_x {
-                let p = [x as f64 + 0.5, y as f64 + 0.5];
-
-                let w0 = edge(v2, v4, p);
-                let w1 = edge(v4, v1, p);
-                let w2 = edge(v1, v2, p);
-
-                if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 && area1 > 0.0)
-                    || (w0 <= 0.0 && w1 <= 0.0 && w2 <= 0.0 && area1 < 0.0)
-                {
-                    self.set_pixel(x as isize, y as isize, color);
-                }
+            if area > 0.0 {
+                w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0
+            } else {
+                w0 <= 0.0 && w1 <= 0.0 && w2 <= 0.0
             }
         }
 
-        // rendering triangle2
-        let t2_min_x = v2[0].min(v3[0]).min(v4[0]).floor().max(0.0) as usize;
-        let t2_max_x = v2[0]
-            .max(v3[0])
-            .max(v4[0])
-            .ceil()
-            .min(self.width as f64 - 1.0) as usize;
-        let t2_min_y = v2[1].min(v3[1]).min(v4[1]).floor().max(0.0) as usize;
-        let t2_max_y = v2[1]
-            .max(v3[1])
-            .max(v4[1])
-            .ceil()
-            .min(self.height as f64 - 1.0) as usize;
+        if polygon_area(&vertices) > 0.0 {
+            vertices.reverse();
+        }
 
-        let area2 = edge(v2, v3, v4);
+        while vertices.len() > 2 {
+            let n = vertices.len();
+            let mut ear_found = false;
 
-        for y in t2_min_y..=t2_max_y {
-            for x in t2_min_x..=t2_max_x {
-                let p = [x as f64 + 0.5, y as f64 + 0.5];
+            for i in 0..n {
+                let previous = vertices[(i + n - 1) % n];
+                let current = vertices[i];
+                let next = vertices[(i + 1) % n];
 
-                let w0 = edge(v2, v3, p);
-                let w1 = edge(v3, v4, p);
-                let w2 = edge(v4, v2, p);
+                if cross(previous, current, next) >= 0.0 {
+                    continue;
+                }
 
-                if (w0 >= 0.0 && w1 >= 0.0 && w2 >= 0.0 && area2 > 0.0)
-                    || (w0 <= 0.0 && w1 <= 0.0 && w2 <= 0.0 && area2 < 0.0)
-                {
-                    self.set_pixel(x as isize, y as isize, color);
+                let mut is_ear = true;
+                for j in 0..n {
+                    if j == (i + n - 1) % n || j == i || j == (i + 1) % n {
+                        continue;
+                    }
+                    if point_in_triangle(vertices[j], previous, current, next) {
+                        is_ear = false;
+                        break;
+                    }
+                }
+
+                if is_ear {
+                    triangles.push([previous, current, next]);
+                    vertices.remove(i);
+                    ear_found = true;
+                    break;
                 }
             }
+
+            if !ear_found {
+                eprintln!("No ear found.");
+                break;
+            }
         }
-        */
+        if vertices.len() == 3 {
+            triangles.push([vertices[0], vertices[1], vertices[2]]);
+        }
+
+        triangles
     }
 }

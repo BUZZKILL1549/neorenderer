@@ -10,6 +10,7 @@ impl Colors {
     pub const GREEN: Colors = Colors { value: 0x00FF00 };
     pub const BLUE: Colors = Colors { value: 0x0000FF };
     pub const BLACK: Colors = Colors { value: 0x000000 };
+    pub const WHITE: Colors = Colors { value: 0xFFFFFF };
 
     pub fn as_u32(&self) -> u32 {
         self.value
