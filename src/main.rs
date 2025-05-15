@@ -62,6 +62,7 @@ fn main() {
          }
         */
         // Cool looking Gouraud triangle (with depth)
+        /*
         let v0 = ColoredVertex {
             pos: [100.0, 100.0, 0.0, 0.5], // closer (w = 0.5)
             color: Colors::RED,
@@ -78,7 +79,7 @@ fn main() {
         };
 
         ColoredVertex::draw_gouraud_triangle(&mut framebuffer, v0, v1, v2);
-
+        */
         // Makes a really cool decagon
         /*
         let center = ColoredVertex {
@@ -175,6 +176,38 @@ fn main() {
             ColoredVertex::draw_gourad_triangle(&mut framebuffer, center, v1, v2);
         }
         */
+        // Using the new mesh system
+        let vertices = vec![
+            Vertex {
+                position: [600.0, 300.0],
+                color: Colors::RED,
+            },
+            Vertex {
+                position: [500.0, 500.0],
+                color: Colors::GREEN,
+            },
+            Vertex {
+                position: [700.0, 500.0],
+                color: Colors::BLUE,
+            },
+            Vertex {
+                position: [600.0, 300.0],
+                color: Colors::BLUE,
+            },
+            Vertex {
+                position: [700.0, 500.0],
+                color: Colors::RED,
+            },
+            Vertex {
+                position: [800.0, 300.0],
+                color: Colors::GREEN,
+            },
+        ];
+
+        let indices = vec![0, 1, 2, 3, 4, 5];
+
+        let mesh = Mesh::new(vertices, indices);
+        mesh.draw(&mut framebuffer);
 
         window
             .update_with_buffer(&framebuffer.buffer, WIDTH, HEIGHT)

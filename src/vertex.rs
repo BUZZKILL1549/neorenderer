@@ -1,13 +1,49 @@
 use crate::{colors::Colors, framebuffer::Framebuffer};
 
-#[allow(dead_code)]
-#[derive(Debug, Clone, Copy)]
-pub struct ColoredVertex {
-    pub pos: [f32; 4],
+#[derive(Clone, Copy)]
+pub struct Vertex {
+    pub position: [f64; 2],
     pub color: Colors,
 }
 
-// this thing now has depth to it. pretty cool, huh?
+pub struct Mesh {
+    pub vertices: Vec<Vertex>,
+    pub indices: Vec<usize>,
+}
+
+impl Mesh {
+    pub fn new(vertices: Vec<Vertex>, indices: Vec<usize>) -> Self {
+        Self { vertices, indices }
+    }
+
+    pub fn draw(&self, fb: &mut Framebuffer) {
+        for tri in self.indices.chunks(3) {
+            let v0 = self.vertices[tri[0]].to_colored_vertex();
+            let v1 = self.vertices[tri[1]].to_colored_vertex();
+            let v2 = self.vertices[tri[2]].to_colored_vertex();
+
+            ColoredVertex::draw_gouraud_triangle(fb, v0, v1, v2);
+        }
+    }
+}
+
+impl Vertex {
+    // Convert Vertex to ColoredVertex with w=1.0 (no perspective division)
+    pub fn to_colored_vertex(&self) -> ColoredVertex {
+        ColoredVertex {
+            pos: [self.position[0] as f32, self.position[1] as f32, 0.0, 1.0],
+            color: self.color,
+        }
+    }
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy)]
+pub struct ColoredVertex {
+    pub pos: [f32; 4], // x, y, z, w
+    pub color: Colors,
+}
+
 impl ColoredVertex {
     pub fn draw_gouraud_triangle(
         fb: &mut Framebuffer,
@@ -17,6 +53,14 @@ impl ColoredVertex {
     ) {
         fn edge(a: [f32; 2], b: [f32; 2], c: [f32; 2]) -> f32 {
             (c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0])
+        }
+
+        fn prepare(v: &ColoredVertex) -> (f32, [f32; 2], [f32; 3]) {
+            let inv_w = 1.0 / v.pos[3];
+            let screen_pos = [v.pos[0] * inv_w, v.pos[1] * inv_w];
+            let rgb = v.color.to_rgb_f32();
+            let col_over_w = [rgb[0] * inv_w, rgb[1] * inv_w, rgb[2] * inv_w];
+            (inv_w, screen_pos, col_over_w)
         }
 
         let (inv_w0, p0, col0) = prepare(&v0);
@@ -68,13 +112,6 @@ impl ColoredVertex {
                 }
             }
         }
-
-        fn prepare(v: &ColoredVertex) -> (f32, [f32; 2], [f32; 3]) {
-            let inv_w = 1.0 / v.pos[3];
-            let screen_pos = [v.pos[0] * inv_w, v.pos[1] * inv_w];
-            let rgb = v.color.to_rgb_f32();
-            let col_over_w = [rgb[0] * inv_w, rgb[1] * inv_w, rgb[2] * inv_w];
-            (inv_w, screen_pos, col_over_w)
-        }
     }
 }
+
