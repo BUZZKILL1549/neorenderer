@@ -6,8 +6,8 @@ use colors::*;
 
 mod constructs;
 
-mod gourad;
-use gourad::*;
+mod vertex;
+use vertex::*;
 
 use minifb::{Key, Window, WindowOptions};
 
@@ -61,21 +61,23 @@ fn main() {
              framebuffer.draw_filled_triangle(triangle[0], triangle[1], triangle[2], Colors::WHITE);
          }
         */
-        // Cool looking Gouraud triangle
+        // Cool looking Gouraud triangle (with depth)
         let v0 = ColoredVertex {
-            pos: [600.0, 300.0],
+            pos: [100.0, 100.0, 0.0, 0.5], // closer (w = 0.5)
             color: Colors::RED,
         };
+
         let v1 = ColoredVertex {
-            pos: [500.0, 500.0],
+            pos: [300.0, 100.0, 0.0, 1.0], // farther (w = 1.0)
             color: Colors::GREEN,
         };
+
         let v2 = ColoredVertex {
-            pos: [700.0, 500.0],
+            pos: [200.0, 300.0, 0.0, 2.0], // very far (w = 2.0)
             color: Colors::BLUE,
         };
 
-        ColoredVertex::draw_gourad_triangle(&mut framebuffer, v0, v1, v2);
+        ColoredVertex::draw_gouraud_triangle(&mut framebuffer, v0, v1, v2);
 
         // Makes a really cool decagon
         /*
